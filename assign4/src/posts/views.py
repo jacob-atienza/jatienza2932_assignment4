@@ -1,10 +1,12 @@
-from django.shortcuts import render
-from .models import Post
-from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.http import JsonResponse, HttpResponse
+from .models import Post, Photo
 from .forms import PostForm
 from profiles.models import Profile
-# Create your views here.
+from .utils import action_permission
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def post_list_and_create(request):
     form = PostForm(request.POST or None)
 
@@ -20,27 +22,22 @@ def post_list_and_create(request):
                 'author': instance.author.user.username,
                 'id': instance.id,
             })
-    context = {
-        'form': form,
-    }
+    context = {'form': form}
     return render(request, 'posts/main.html', context)
 
+@login_required
 def post_detail(request, pk):
     obj = Post.objects.get(pk=pk)
     form = PostForm()
-
-    context = {
-        'obj': obj,
-        'form': form,
-    }
-
+    context = {'obj': obj, 'form': form}
     return render(request, 'posts/detail.html', context)
 
+@login_required
 def load_post_data_view(request, num_posts):
     visible = 3
     upper = num_posts
     lower = upper - visible
-    size = Post.objects.all().count()
+    size = Post.objects.count()
 
     qs = Post.objects.all()
     data = []
@@ -49,13 +46,14 @@ def load_post_data_view(request, num_posts):
             'id': obj.id,
             'title': obj.title,
             'description': obj.description,
-            'liked': True if request.user in obj.liked.all() else False,
+            'liked': request.user in obj.liked.all(),
             'count': obj.like_count,
             'author': obj.author.user.username,
         }
         data.append(item)
-    return JsonResponse({'data':data[lower:upper], 'size':size})
+    return JsonResponse({'data': data[lower:upper], 'size': size})
 
+@login_required
 def post_detail_data_view(request, pk):
     obj = Post.objects.get(pk=pk)
     data = {
@@ -67,29 +65,27 @@ def post_detail_data_view(request, pk):
     }
     return JsonResponse({'data': data})
 
+@login_required
 def like_unlike_post(request):
-    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         pk = request.POST.get('pk')
         obj = Post.objects.get(pk=pk)
-
         if request.user in obj.liked.all():
             liked = False
             obj.liked.remove(request.user)
         else:
             liked = True
             obj.liked.add(request.user)
+        return JsonResponse({'liked': liked, 'count': obj.liked.count()})
+    
+    return redirect('posts:main-page')
 
-        return JsonResponse({
-            'liked': liked,
-            'count': obj.liked.count()
-        })
-
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
+@login_required
+@action_permission
 def update_post(request, pk):
     obj = Post.objects.get(pk=pk)
 
-    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         new_title = request.POST.get('title')
         new_description = request.POST.get('description')
 
@@ -101,15 +97,33 @@ def update_post(request, pk):
         obj.save()
 
         return JsonResponse({'title': new_title, 'description': new_description})
+    
+    return redirect('posts:main-page')
 
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
-
+@login_required
+@action_permission
 def delete_post(request, pk):
     obj = Post.objects.get(pk=pk)
 
-    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         obj.delete()
         return JsonResponse({'message': 'Post deleted successfully!'})
+    
+    return redirect('posts:main-page')
+
+@login_required
+def image_upload_view(request):
+    if request.method == 'POST':
+        img = request.FILES.get('file')
+        new_post_id = request.POST.get('new_post_id')
+
+        if img and new_post_id:
+            try:
+                post = Post.objects.get(id=new_post_id)
+                Photo.objects.create(image=img, post=post)
+
+                return JsonResponse({'message': 'Image uploaded successfully!'})
+            except Post.DoesNotExist:
+                return JsonResponse({'error': 'Post not found'}, status=404)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)

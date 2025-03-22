@@ -1,0 +1,5 @@
+# .prettierignore
+
+# Ignore all Django templates
+**/templates/**/*.html
+*.html

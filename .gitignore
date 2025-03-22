@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Ignore the actual virtual environment
+Lib/
+Include/
+Scripts/
+pyvenv.cfg
+
+# Common ignores
+__pycache__/
+*.pyc
+*.log
+*.sqlite3
+.env
+node_modules/
+
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+*.sqlite3
+.env
+.env.*
+
+# VSCode / IDEs
+.vscode/
+.idea/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+staticfiles/
+media/
+
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# Coverage / Testing
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+
+# Virtual environment
+venv/
+env/
+ENV/

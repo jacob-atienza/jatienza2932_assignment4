@@ -5,7 +5,7 @@ from .forms import PostForm
 from profiles.models import Profile
 from .utils import action_permission
 from django.contrib.auth.decorators import login_required
-
+from django.db.models import Count
 @login_required
 def post_list_and_create(request):
     form = PostForm(request.POST or None)
@@ -32,14 +32,24 @@ def post_detail(request, pk):
     context = {'obj': obj, 'form': form}
     return render(request, 'posts/detail.html', context)
 
+from django.db.models import Count
+
 @login_required
 def load_post_data_view(request, num_posts):
     visible = 3
     upper = num_posts
     lower = upper - visible
-    size = Post.objects.count()
+    size = Post.objects.all().count()
 
-    qs = Post.objects.all()
+    sort = request.GET.get('sort', 'updated')
+
+    if sort == 'likes':
+        qs = Post.objects.annotate(like_total=Count('liked')).order_by('-like_total', '-updated')
+    elif sort == 'oldest':
+        qs = Post.objects.order_by('created')
+    else:
+        qs = Post.objects.order_by('-updated')
+
     data = []
     for obj in qs:
         item = {
@@ -47,11 +57,13 @@ def load_post_data_view(request, num_posts):
             'title': obj.title,
             'description': obj.description,
             'liked': request.user in obj.liked.all(),
-            'count': obj.like_count,
+            'count': obj.like_total if sort == 'likes' else obj.liked.count(),
             'author': obj.author.user.username,
         }
         data.append(item)
+
     return JsonResponse({'data': data[lower:upper], 'size': size})
+
 
 @login_required
 def post_detail_data_view(request, pk):

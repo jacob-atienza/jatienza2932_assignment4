@@ -17,6 +17,9 @@ const addBtn = document.getElementById("add-btn");
 const closeBtns = [...document.getElementsByClassName("add-modal-close")];
 const dropzone = document.getElementById("my-dropzone");
 
+const sortSelect = document.getElementById("sort-select");
+let sortBy = "updated";
+
 const getCookie = (name) => {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
@@ -76,7 +79,7 @@ let visible = 3;
 const getData = () => {
   $.ajax({
     type: "GET",
-    url: `/data/${visible}`,
+    url: `/data/${visible}/?sort=${sortBy}`,
     success: (response) => {
       console.log(response);
       const data = response.data;
@@ -210,6 +213,13 @@ const myDropzone = new Dropzone("#my-dropzone", {
   maxFiles: 5,
   maxFileSize: 4,
   acceptedFiles: ".png, .jpg, .jpeg, .gif",
+});
+
+sortSelect.addEventListener("change", () => {
+  postsBox.innerHTML = "";
+  visible = 3;
+  sortBy = sortSelect.value;
+  getData();
 });
 
 getData();

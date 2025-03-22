@@ -39,25 +39,37 @@
 
         </div>
 
+
+        
         <div id="alert-box"></div>
 
-        <button type="button" class="btn btn-info mb-2" data-bs-toggle="modal" data-bs-target="#addPostModal">
-            add post
-        </button>
+        <div class="d-flex flex-wrap align-items-center mb-3">
 
-        <select id="sort-select" class="form-select w-auto mb-3">
-            <option value="updated" selected>Recently Updated</option>
-            <option value="likes">Most Liked</option>
-            <option value="oldest">Oldest</option>
-        </select>
+            <button type="button" class="btn btn-info me-2 mb-2" data-bs-toggle="modal" data-bs-target="#addPostModal">
+                <i class="bi bi-plus-circle"></i> Add Post
+            </button>
 
+            <select id="sort-select" class="form-select me-2 mb-2" style="width: auto;">
+                <option value="updated" selected>Recently Updated</option>
+                <option value="likes">Most Liked</option>
+                <option value="oldest">Oldest</option>
+            </select>
+
+            <div class="input-group mb-2" style="width: 200px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="search-input" class="form-control" placeholder="Search..." name="search-input">
+            </div>
+
+        </div>
 
         <div id="posts-box"></div>
-        <div id="spinner-box" class="text-center">
-            <div class="spinner-border" role="status">
+
+        <div id="spinner-box" class="text-center my-3" style="display: none;">
+        <div class="spinner-border" role="status"></div>
         </div>
-        </div>
+
         <div class="text-center mb-3" id="end-box">
-            <button class="btn btn-primary" id="load-btn">Load more</button>
+        <button class="btn btn-primary" id="load-btn">Load More</button>
         </div>
-    {%endblock content%}
+
+        {%endblock content%}

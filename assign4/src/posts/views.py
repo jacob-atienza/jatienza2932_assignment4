@@ -139,3 +139,29 @@ def image_upload_view(request):
                 return JsonResponse({'error': 'Post not found'}, status=404)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def search_posts(request):
+  q = request.GET.get('q', '')
+  sort_by = request.GET.get('sort', 'updated')
+
+  posts = Post.objects.filter(title__icontains=q)
+
+  if sort_by == 'likes':
+    posts = posts.annotate(like_total=Count('liked')).order_by('-like_total', '-updated')
+  elif sort_by == 'oldest':
+    posts = posts.order_by('created')
+  else:
+    posts = posts.order_by('-updated')
+
+  data = [{
+    'id': post.id,
+    'title': post.title,
+    'description': post.description,
+    'liked': request.user in post.liked.all(),
+    'count': post.liked.count(),
+    'author': post.author.user.username,
+  } for post in posts]
+
+  return JsonResponse({'data': data})
+

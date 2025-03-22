@@ -4,6 +4,7 @@ const postsBox = document.getElementById("posts-box");
 const spinnerBox = document.getElementById("spinner-box");
 const loadBtn = document.getElementById("load-btn");
 const endBox = document.getElementById("end-box");
+const searchInput = document.getElementById("search-input");
 
 const postForm = document.getElementById("post-form");
 const title = document.getElementById("id_title");
@@ -220,6 +221,69 @@ sortSelect.addEventListener("change", () => {
   visible = 3;
   sortBy = sortSelect.value;
   getData();
+});
+
+const searchPosts = (query) => {
+  $.ajax({
+    type: "GET",
+    url: `/search/?q=${query}&sort=${sortBy}`,
+    success: (response) => {
+      postsBox.innerHTML = "";
+      const data = response.data;
+
+      if (data.length === 0) {
+        postsBox.innerHTML = '<p class="text-muted">No matching posts found.</p>';
+        loadBtn.classList.add("not-visible");
+        endBox.textContent = "";
+        return;
+      }
+
+      data.forEach((el) => {
+        postsBox.innerHTML += `
+          <div class="card mb-2">
+            <div class="card-body">
+              <h5 class="card-title">${el.title}</h5>
+              <p class="card-text">${el.description}</p>
+            </div>
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-3">
+                  <a href="${url}${el.id}" class="btn btn-primary">Details</a>
+                </div>
+                <div class="col-3">
+                  <form class="like-unlike-forms" data-form-id="${el.id}">
+                    <button class="btn btn-primary" id="like-unlike-${el.id}">
+                      ${el.liked ? `Unlike (${el.count})` : `Like (${el.count})`}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      });
+
+      likeUnlikePosts();
+      loadBtn.classList.add("not-visible");
+      endBox.textContent = "Search results loaded.";
+    },
+    error: (error) => {
+      console.log(error);
+    },
+  });
+};
+
+searchInput.addEventListener("keyup", () => {
+  const query = searchInput.value.trim();
+
+  if (query.length > 0) {
+    searchPosts(query);
+  } else {
+    postsBox.innerHTML = "";
+    visible = 3;
+    getData(); 
+    loadBtn.classList.remove("not-visible");
+    endBox.textContent = "";
+  }
 });
 
 getData();
